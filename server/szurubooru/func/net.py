@@ -1,16 +1,21 @@
+import re   
 import json
 import logging
 import subprocess
 import urllib.error
 import urllib.request
 from threading import Thread
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
+
+import tweepy
 
 from szurubooru import config, errors
 from szurubooru.func import mime
 
 logger = logging.getLogger(__name__)
 _dl_chunk_size = 2 ** 15
+twitter_auth = tweepy.AppAuthHandler('IQKbtAYlXLripLGPWd0HUA', 'GgDYlkSvaPxGxC4X8liwpUoqKwwr3lCADbz8A7ADU')
+twitter_api = api = tweepy.API(twitter_auth)
 
 
 class DownloadError(errors.ProcessingError):
@@ -29,6 +34,14 @@ def download(url: str, use_video_downloader: bool = False) -> bytes:
             url = _get_youtube_dl_content_url(url) or url
         except errors.ThirdPartyError as ex:
             youtube_dl_error = ex
+            tweet_id = _is_twitter_url(url)
+            if tweet_id:
+                tweet = twitter_api.get_status(tweet_id)
+                if 'media' in tweet.entities:
+                    media_list = tweet.entities['media']
+                    if len(media_list) > 0:
+                        url = media_list[0]['media_url_https']
+                        youtube_dl_error = None
 
     request = urllib.request.Request(url)
     if config.config["user_agent"]:
@@ -61,6 +74,12 @@ def download(url: str, use_video_downloader: bool = False) -> bytes:
         raise youtube_dl_error
 
     return content_buffer
+
+def _is_twitter_url(url: str) -> Optional[str]:
+    matched = re.match(r'^https://twitter.com/.+/status/(\d+)', url)
+    if matched:
+        return matched.group(1)
+    return None
 
 
 def _get_youtube_dl_content_url(url: str) -> str:
