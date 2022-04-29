@@ -65,8 +65,8 @@ CMD ["szurubooru/"]
 FROM prereqs as release
 WORKDIR /opt/app
 
-ARG PUID=1000
-ARG PGID=1000
+ARG PUID=1027
+ARG PGID=65536
 
 RUN apk --no-cache add \
         dumb-init \
