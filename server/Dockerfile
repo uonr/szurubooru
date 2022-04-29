@@ -31,8 +31,6 @@ RUN apk --no-cache add \
         "heif-image-plugin>=0.3.2" \
         youtube_dl \
         "pillow-avif-plugin>=1.1.0" \
-        requests \
-        pyheif-pillow-opener \
         tweepy \
  && apk --no-cache del py3-pip
 
@@ -74,6 +72,7 @@ RUN apk --no-cache add \
         dumb-init \
         py3-setuptools \
         py3-waitress \
+        py3-requests \
  && mkdir -p /opt/app /data \
  && addgroup -g ${PGID} app \
  && adduser -SDH -h /opt/app -g '' -G app -u ${PUID} app \
